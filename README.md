@@ -1,17 +1,17 @@
-# 🔮 Truth Serum: Potion Factory Fraud Detection
+# Truth Serum: Potion Factory Fraud Detection
 
-**HackUTD 2025 - Best Use of Claude**
+**HackUTD 2025**
 
 A magical dashboard that detects dishonest courier witches and optimizes potion delivery routes using real-time data analysis and AI.
 
-## 🎯 What This Project Does
+## What This Project Does
 
 1. **Fraud Detection**: Analyzes cauldron drainage patterns and compares them with witch-reported tickets to catch liars
 2. **Trust Scoring**: Tracks each witch's honesty over time
 3. **Route Optimization**: (Bonus) Finds the minimum number of witches needed to prevent cauldron overflows
 4. **Interactive Dashboard**: Beautiful visualization of the potion factory operations
 
-## 📁 Project Structure
+## Project Structure
 
 ```
 truth-serum-potions/
@@ -34,7 +34,7 @@ truth-serum-potions/
 └── README.md            # You are here!
 ```
 
-## 🚀 How to Run This Project
+## How to Run This Project
 
 ### Prerequisites
 - **Python 3.8+** (for backend)
@@ -63,7 +63,7 @@ npm start
 
 The dashboard will open at `http://localhost:3000`
 
-## 🧙‍♀️ How It Works
+## How It Works
 
 ### The Fraud Detection Algorithm
 
@@ -81,7 +81,7 @@ Each witch starts with 100 trust points:
 - 🟡 **Minor discrepancy** (±5%): -5 points
 - 🔴 **Major fraud** (>10% off): -20 points
 
-## 📊 API Endpoints
+## API Endpoints
 
 The backend provides these endpoints:
 
@@ -90,7 +90,7 @@ The backend provides these endpoints:
 - `GET /api/witches` - Witch trust scores
 - `GET /api/cauldrons` - Cauldron statistics
 
-## 🎨 Technologies Used
+## Technologies Used
 
 **Backend:**
 - Python 3
@@ -104,7 +104,7 @@ The backend provides these endpoints:
 - Leaflet (interactive maps)
 - Tailwind CSS (styling)
 
-## 🏆 What Makes This Impressive
+## What Makes This Impressive
 
 1. **Real Data Science**: Proper time-series analysis with derivative calculations
 2. **Robust Algorithm**: Handles edge cases (continuous filling, multiple drains per day)
@@ -112,7 +112,7 @@ The backend provides these endpoints:
 4. **Storytelling**: Not just "fraud detection" — it's catching dishonest witches! 🧙‍♀️
 5. **Bonus Challenge**: Route optimization to minimize witch count
 
-## 🐛 Troubleshooting
+## Troubleshooting
 
 **Backend won't start?**
 - Make sure you're in the `backend` folder
@@ -127,7 +127,7 @@ The backend provides these endpoints:
 - The HackUTD API might be rate-limited
 - Check your internet connection
 
-## 📝 Presentation Tips
+## Presentation Tips
 
 1. **Start with the story**: "Witches are stealing potions, we caught them!"
 2. **Show the dashboard first**: Live demo is most impressive
@@ -135,7 +135,7 @@ The backend provides these endpoints:
 4. **Highlight creativity**: Trust scores, witch names, magic theme
 5. **Connect to real-world**: "This same system detects fraud in supply chains"
 
-## 🎓 Learning Resources
+## Learning Resources
 
 Since this is your first time coding, here are the key concepts:
 
@@ -146,7 +146,3 @@ Since this is your first time coding, here are the key concepts:
 - **Endpoint**: A URL that returns data (like a vending machine button)
 
 ---
-
-Built with ❤️ and ✨ by Eshva for HackUTD 2025
-
-**Good luck! You've got this! 🚀**
