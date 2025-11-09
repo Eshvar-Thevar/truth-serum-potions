@@ -1,55 +1,48 @@
 """
-🔮 FRAUD DETECTOR
-This is the core algorithm that catches dishonest witches!
+🔮 FRAUD DETECTOR - VERY BALANCED THRESHOLDS AND PENALTIES
+Realistic fraud detection with fair, lenient trust scoring
 """
 
 from typing import Dict, List
 from data_processor import DataProcessor
 from datetime import datetime
+from collections import defaultdict
 
 class FraudDetector:
     """Detects fraudulent transport tickets by comparing them with actual drain events"""
     
     def __init__(self, historical_data: List[Dict], tickets: List[Dict]):
-        """
-        Initialize the fraud detector
-        
-        Args:
-            historical_data: Historical cauldron level data from API
-            tickets: Transport tickets from API
-        """
         self.processor = DataProcessor(historical_data)
         self.tickets = tickets
         self.cauldron_fill_rates = {}
         
-        # Pre-calculate fill rates for all cauldrons
+        # Pre-calculate fill rates
         for cauldron_id in self.processor.cauldron_ids:
             self.cauldron_fill_rates[cauldron_id] = self.processor.calculate_fill_rate(cauldron_id)
+        
+        # Group tickets by cauldron and date
+        self.tickets_by_cauldron_date = defaultdict(list)
+        for ticket in tickets:
+            key = (ticket['cauldron_id'], ticket['date'])
+            self.tickets_by_cauldron_date[key].append(ticket)
     
     def validate_ticket(self, ticket: Dict) -> Dict:
         """
-        Validate a single transport ticket
-        
-        Args:
-            ticket: Ticket dictionary with ticket_id, cauldron_id, amount_collected, courier_id, date
-            
-        Returns:
-            Validation result
+        Validate a ticket against the ACTUAL daily drain.
+        Uses LENIENT thresholds: 10% / 25% 
         """
         cauldron_id = ticket['cauldron_id']
         reported_amount = ticket['amount_collected']
         date = ticket['date']
         
-        # Get fill rate for this cauldron
         fill_rate = self.cauldron_fill_rates.get(cauldron_id, 0.1)
         
-        # Detect drain events on this date
-        drain_events = self.processor.detect_drain_events(cauldron_id, date)
+        # Get THE actual drain for this day
+        daily_drain = self.processor.get_daily_drain(cauldron_id, date)
         
-        # If no drain detected, check if amount is reasonable
-        if not drain_events:
-            if reported_amount <= 100:  # Within witch capacity
-                # Assume valid - drain detection may have missed small drains
+        if daily_drain is None:
+            # No drain detected
+            if reported_amount <= 100:
                 return {
                     'ticket_id': ticket['ticket_id'],
                     'cauldron_id': cauldron_id,
@@ -61,11 +54,11 @@ class FraudDetector:
                     'percent_error': 0,
                     'status': 'valid',
                     'matched_drain': None,
-                    'reason': 'Amount within reasonable limits (no drain detected in data)',
-                    'fill_rate_used': fill_rate
+                    'reason': 'No significant drain detected, amount reasonable',
+                    'fill_rate_used': fill_rate,
+                    'tickets_this_day': 1
                 }
             else:
-                # Exceeds capacity - definitely fraud
                 return {
                     'ticket_id': ticket['ticket_id'],
                     'cauldron_id': cauldron_id,
@@ -77,48 +70,47 @@ class FraudDetector:
                     'percent_error': (reported_amount - 100) / 100 * 100,
                     'status': 'fraudulent',
                     'matched_drain': None,
-                    'reason': f'Exceeds witch capacity! Reported {reported_amount:.1f} units (max is 100)',
-                    'fill_rate_used': fill_rate
+                    'reason': f'Exceeds capacity ({reported_amount:.1f} > 100)',
+                    'fill_rate_used': fill_rate,
+                    'tickets_this_day': 1
                 }
         
-        # Find best matching drain
-        best_match = None
-        min_error = float('inf')
+        # Calculate total expected from ACTUAL drain
+        expected_total = self.processor.calculate_expected_collection(cauldron_id, daily_drain, fill_rate)
         
-        for drain in drain_events:
-            expected = self.processor.calculate_expected_collection(cauldron_id, drain, fill_rate)
-            error = abs(expected - reported_amount)
-            
-            if error < min_error:
-                min_error = error
-                best_match = drain
+        # Check how many tickets exist for this day/cauldron
+        key = (cauldron_id, date)
+        day_tickets = self.tickets_by_cauldron_date[key]
+        num_tickets = len(day_tickets)
         
-        # Calculate expected amount
-        expected_amount = self.processor.calculate_expected_collection(
-            cauldron_id, 
-            best_match, 
-            fill_rate
-        )
+        # Divide expected amount by number of tickets
+        expected_amount = expected_total / num_tickets
         
         difference = reported_amount - expected_amount
         percent_error = abs(difference / expected_amount * 100) if expected_amount > 0 else 100
         
-        # BALANCED THRESHOLDS - catch real fraud but allow measurement error
-        if percent_error < 7:  # Within 7% - VALID (allows for measurement error)
+        # LENIENT THRESHOLDS: 10% / 25%
+        if percent_error < 10:
             status = 'valid'
-            reason = f'Reported amount matches expected (±{percent_error:.1f}%)'
-        elif percent_error < 15:  # 7-15% difference - SUSPICIOUS
+            reason = f'Matches expected share (±{percent_error:.1f}%)'
+            if num_tickets > 1:
+                reason += f' [{num_tickets} witches this day]'
+        elif percent_error < 25:  # Was 18%, now 25%
             status = 'suspicious'
             if difference > 0:
-                reason = f'Over-reported by {difference:.2f} units (+{percent_error:.1f}%) - suspicious'
+                reason = f'Over-reported by {difference:.2f} units (+{percent_error:.1f}%)'
             else:
-                reason = f'Under-reported by {abs(difference):.2f} units (-{percent_error:.1f}%) - suspicious'
-        else:  # > 15% difference - FRAUDULENT
+                reason = f'Under-reported by {abs(difference):.2f} units (-{percent_error:.1f}%)'
+            if num_tickets > 1:
+                reason += f' [{num_tickets} witches this day]'
+        else:  # >= 25%
             status = 'fraudulent'
             if difference > 0:
-                reason = f'FRAUD: Over-reported by {difference:.2f} units (+{percent_error:.1f}%) - likely stealing!'
+                reason = f'FRAUD: Over-reported by {difference:.2f} units (+{percent_error:.1f}%)'
             else:
-                reason = f'FRAUD: Under-reported by {abs(difference):.2f} units (-{percent_error:.1f}%) - likely hoarding!'
+                reason = f'FRAUD: Under-reported by {abs(difference):.2f} units (-{percent_error:.1f}%)'
+            if num_tickets > 1:
+                reason += f' [{num_tickets} witches this day]'
         
         return {
             'ticket_id': ticket['ticket_id'],
@@ -131,19 +123,19 @@ class FraudDetector:
             'percent_error': percent_error,
             'status': status,
             'matched_drain': {
-                'start_time': best_match['start_time'].isoformat(),
-                'end_time': best_match['end_time'].isoformat(),
-                'duration_minutes': best_match['duration_minutes'],
-                'visible_drain': best_match['drain_amount']
-            } if best_match else None,
+                'start_time': daily_drain['start_time'].isoformat(),
+                'end_time': daily_drain['end_time'].isoformat(),
+                'duration_minutes': daily_drain['duration_minutes'],
+                'visible_drain': daily_drain['drain_amount'],
+                'total_expected': expected_total
+            },
             'reason': reason,
-            'fill_rate_used': fill_rate
+            'fill_rate_used': fill_rate,
+            'tickets_this_day': num_tickets
         }
     
     def analyze_all_tickets(self) -> Dict:
-        """
-        Analyze all tickets and generate a comprehensive fraud report
-        """
+        """Analyze all tickets"""
         results = []
         
         for ticket in self.tickets:
@@ -175,11 +167,12 @@ class FraudDetector:
     
     def calculate_witch_trust_scores(self, validated_tickets: List[Dict]) -> Dict:
         """
-        Calculate trust scores for each witch
+        Calculate trust scores with VERY LIGHT PENALTIES
+        Suspicious: -2 (was -3)
+        Fraudulent: -8 (was -15)
         """
         witch_data = {}
         
-        # Initialize all witches with 100 trust
         witch_ids = set(ticket['courier_id'] for ticket in validated_tickets)
         for witch_id in witch_ids:
             witch_data[witch_id] = {
@@ -192,7 +185,6 @@ class FraudDetector:
                 'total_fraud_amount': 0
             }
         
-        # Update scores based on ticket validation
         for ticket in validated_tickets:
             witch_id = ticket['courier_id']
             witch_data[witch_id]['total_tickets'] += 1
@@ -201,23 +193,19 @@ class FraudDetector:
                 witch_data[witch_id]['valid_tickets'] += 1
             elif ticket['status'] == 'suspicious':
                 witch_data[witch_id]['suspicious_tickets'] += 1
-                witch_data[witch_id]['trust_score'] -= 5
+                witch_data[witch_id]['trust_score'] -= 2  # Was -3, now -2
                 witch_data[witch_id]['total_fraud_amount'] += abs(ticket['difference'])
             elif ticket['status'] == 'fraudulent':
                 witch_data[witch_id]['fraudulent_tickets'] += 1
-                witch_data[witch_id]['trust_score'] -= 20
+                witch_data[witch_id]['trust_score'] -= 8  # Was -15, now -8
                 witch_data[witch_id]['total_fraud_amount'] += abs(ticket['difference'])
         
-        # Ensure trust score doesn't go below 0
         for witch_id in witch_data:
             witch_data[witch_id]['trust_score'] = max(0, witch_data[witch_id]['trust_score'])
-            
-            # Calculate accuracy percentage
             total = witch_data[witch_id]['total_tickets']
             valid = witch_data[witch_id]['valid_tickets']
             witch_data[witch_id]['accuracy_percent'] = (valid / total * 100) if total > 0 else 0
         
-        # Convert to list and sort by trust score (worst first)
         witch_list = list(witch_data.values())
         witch_list.sort(key=lambda x: x['trust_score'])
         

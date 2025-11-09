@@ -67,12 +67,22 @@ function FactoryMap({ background }) {
       <MapContainer
         center={[centerLat, centerLon]}
         zoom={14}
-        style={{ height: '600px', width: '100%', borderRadius: '15px' }}
+        style={{ height: '600px', width: '100%', borderRadius: '15px', background: '#1e1b4b' }}
+        zoomControl={true}
+        attributionControl={false}
       >
-        <TileLayer
-          url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
-          attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
-        />
+        {/* NO TILE LAYER - Just blank purple background! */}
+        
+        {/* Custom background using a rectangle */}
+        <div style={{
+          position: 'absolute',
+          top: 0,
+          left: 0,
+          right: 0,
+          bottom: 0,
+          background: 'linear-gradient(135deg, #1e1b4b 0%, #312e81 50%, #1e1b4b 100%)',
+          zIndex: -1
+        }}></div>
 
         {/* Draw edges as polylines */}
         {edges.map((edge, index) => {
@@ -85,8 +95,8 @@ function FactoryMap({ background }) {
                 key={index}
                 positions={[fromPos, toPos]}
                 color="#8b5cf6"
-                weight={2}
-                opacity={0.6}
+                weight={3}
+                opacity={0.7}
               />
             );
           }
@@ -100,7 +110,7 @@ function FactoryMap({ background }) {
               center={[cauldron.latitude, cauldron.longitude]}
               radius={50}
               fillColor="#8b5cf6"
-              fillOpacity={0.2}
+              fillOpacity={0.3}
               color="#8b5cf6"
               weight={2}
             />
@@ -125,7 +135,7 @@ function FactoryMap({ background }) {
           center={[enchanted_market.latitude, enchanted_market.longitude]}
           radius={100}
           fillColor="#ec4899"
-          fillOpacity={0.2}
+          fillOpacity={0.3}
           color="#ec4899"
           weight={2}
         />

@@ -1,33 +1,24 @@
 """
-🔮 DATA PROCESSOR - FIXED FOR GRADUAL DRAINS
-This module analyzes historical cauldron data to calculate fill rates and detect drain events.
+🔮 DATA PROCESSOR - CORRECT APPROACH
+Find the ACTUAL daily drain, don't search for one that fits the report
 """
 
 import numpy as np
-from datetime import datetime, timedelta
-from typing import Dict, List, Tuple
+from datetime import datetime
+from typing import Dict, List
 
 class DataProcessor:
     """Processes cauldron level data to find patterns and drain events"""
     
     def __init__(self, historical_data: List[Dict]):
-        """
-        Initialize with historical data from the API
-        
-        Args:
-            historical_data: List of {timestamp, cauldron_levels} dictionaries
-        """
         self.data = historical_data
         self.cauldron_ids = list(historical_data[0]['cauldron_levels'].keys()) if historical_data else []
         
     def calculate_fill_rate(self, cauldron_id: str) -> float:
-        """
-        Calculate the average fill rate (units per minute) for a cauldron.
-        """
+        """Calculate the average fill rate from REAL data"""
         levels = []
         timestamps = []
         
-        # Extract all level data for this cauldron
         for entry in self.data:
             level = entry['cauldron_levels'].get(cauldron_id, 0)
             timestamp = datetime.fromisoformat(entry['timestamp'].replace('Z', '+00:00'))
@@ -37,14 +28,12 @@ class DataProcessor:
         if len(levels) < 10:
             return 0.1
         
-        # Find periods of steady increase (no drains)
         fill_rates = []
         
         for i in range(1, len(levels)):
             time_diff = (timestamps[i] - timestamps[i-1]).total_seconds() / 60
             level_diff = levels[i] - levels[i-1]
             
-            # Only consider positive changes (filling, not draining)
             if level_diff > 0 and time_diff > 0:
                 rate = level_diff / time_diff
                 if 0.01 < rate < 5:
@@ -52,15 +41,15 @@ class DataProcessor:
         
         return np.median(fill_rates) if fill_rates else 0.1
     
-    def detect_drain_events(self, cauldron_id: str, date_str: str) -> List[Dict]:
+    def get_daily_drain(self, cauldron_id: str, date_str: str) -> Dict:
         """
-        Detect drain events - NOW HANDLES BOTH SUDDEN AND GRADUAL DRAINS
+        Get THE daily drain for a cauldron on a specific date.
         
-        Strategy: Look for periods where the level goes DOWN significantly,
-        regardless of whether it's sudden or gradual.
+        Returns the primary drain event (peak to valley) for that day.
         """
         target_date = datetime.fromisoformat(date_str).date()
         
+        # Get all data for this day
         day_data = []
         for entry in self.data:
             timestamp = datetime.fromisoformat(entry['timestamp'].replace('Z', '+00:00'))
@@ -72,86 +61,60 @@ class DataProcessor:
                 })
         
         if len(day_data) < 10:
-            return []
+            return None
         
-        # Sort by timestamp
         day_data.sort(key=lambda x: x['timestamp'])
         
-        # NEW APPROACH: Find the PEAK and the LOW point
-        # The drain is from peak to low
-        drain_events = []
+        # Find the peak and valley (main drain of the day)
+        levels = [d['level'] for d in day_data]
+        peak_level = max(levels)
+        valley_level = min(levels)
+        peak_idx = levels.index(peak_level)
+        valley_idx = levels.index(valley_level)
         
-        # Find local maxima (peaks) in the data
-        i = 1
-        while i < len(day_data) - 1:
-            current_level = day_data[i]['level']
-            prev_level = day_data[i-1]['level']
-            
-            # Is this a local peak? (higher than previous)
-            if current_level > prev_level:
-                # Found a potential peak, now look ahead for the valley
-                peak_idx = i
-                peak_level = current_level
-                
-                # Search forward for the lowest point before it starts rising again
-                j = i + 1
-                min_idx = i
-                min_level = current_level
-                
-                while j < len(day_data):
-                    if day_data[j]['level'] < min_level:
-                        min_level = day_data[j]['level']
-                        min_idx = j
-                    elif day_data[j]['level'] > min_level + 5:
-                        # Started rising significantly, drain is over
-                        break
-                    j += 1
-                
-                # Check if this is a significant drain
-                drain_amount = peak_level - min_level
-                
-                if drain_amount > 20:  # At least 20 units drained
-                    duration = (day_data[min_idx]['timestamp'] - day_data[peak_idx]['timestamp']).total_seconds() / 60
-                    
-                    drain_events.append({
-                        'start_time': day_data[peak_idx]['timestamp'],
-                        'end_time': day_data[min_idx]['timestamp'],
-                        'start_level': peak_level,
-                        'end_level': min_level,
-                        'drain_amount': drain_amount,
-                        'duration_minutes': max(duration, 1)  # At least 1 minute
-                    })
-                    
-                    i = min_idx + 1  # Skip past this drain
-                else:
-                    i += 1
-            else:
-                i += 1
+        # Calculate drain only if valley comes after peak
+        if valley_idx <= peak_idx:
+            # Valley before peak - maybe no drain, just filling
+            return None
         
-        return drain_events
+        drain_amount = peak_level - valley_level
+        
+        # Only count significant drains
+        if drain_amount < 15:
+            return None
+        
+        duration = (day_data[valley_idx]['timestamp'] - day_data[peak_idx]['timestamp']).total_seconds() / 60
+        
+        return {
+            'start_time': day_data[peak_idx]['timestamp'],
+            'end_time': day_data[valley_idx]['timestamp'],
+            'start_level': peak_level,
+            'end_level': valley_level,
+            'drain_amount': drain_amount,
+            'duration_minutes': duration
+        }
     
     def calculate_expected_collection(self, cauldron_id: str, drain_event: Dict, fill_rate: float) -> float:
         """
-        Calculate expected collection amount.
-        
-        For GRADUAL drains, potion keeps flowing in during the entire drain period.
-        Expected = Visible Drain + (Fill Rate × Drain Duration)
+        Calculate expected collection from a drain event.
+        Expected = Visible Drain + (Fill Rate × Duration)
         """
+        if drain_event is None:
+            return 0
+        
         visible_drain = drain_event['drain_amount']
         duration = drain_event['duration_minutes']
+        inflow = fill_rate * duration
         
-        # Potion that flowed in during the drain
-        inflow_during_drain = fill_rate * duration
-        
-        # Total expected collection
-        expected = visible_drain + inflow_during_drain
-        
-        return expected
+        return visible_drain + inflow
+    
+    def detect_drain_events(self, cauldron_id: str, date_str: str) -> List[Dict]:
+        """Get all drain events (for compatibility) - returns list with main daily drain"""
+        drain = self.get_daily_drain(cauldron_id, date_str)
+        return [drain] if drain else []
     
     def get_cauldron_stats(self, cauldron_id: str) -> Dict:
-        """
-        Get comprehensive statistics for a cauldron
-        """
+        """Get comprehensive statistics for a cauldron"""
         levels = [entry['cauldron_levels'].get(cauldron_id, 0) for entry in self.data]
         
         return {

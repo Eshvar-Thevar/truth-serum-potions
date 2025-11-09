@@ -66,19 +66,60 @@ The dashboard will open at `http://localhost:3000`
 
 ### The Fraud Detection Algorithm
 
-1. **Calculate Fill Rates**: Analyzes historical data to determine how fast each cauldron fills
-2. **Detect Drain Events**: Finds sudden drops in cauldron levels (when witches collect potion)
-3. **Account for Continuous Filling**: While a witch drains, potion keeps flowing in!
-   - `Expected Amount = Drain Volume + (Fill Rate × Drain Duration)`
-4. **Match Tickets to Drains**: Links each ticket to its corresponding drain event by date
-5. **Flag Suspicious Tickets**: If reported amount doesn't match expected amount → 🚨 FRAUD!
+Our algorithm validates transport tickets by comparing reported amounts against actual cauldron drainage data.
+
+#### Step 1: Calculate Per-Cauldron Fill Rates
+Each cauldron has a unique fill rate, calculated from historical data:
+- Analyzes minute-by-minute level changes from the API
+- Identifies periods of steady increase (no drains)
+- Calculates median fill rate (units per minute)
+- Example rates: 0.08 - 0.22 units/min depending on cauldron
+
+#### Step 2: Detect Daily Drain Events
+For each ticket's date and cauldron:
+- Finds the peak level (highest point of the day)
+- Finds the valley level (lowest point after peak)
+- Calculates visible drain = peak - valley
+- Measures drain duration (peak time to valley time)
+
+#### Step 3: Account for Continuous Filling (CRITICAL!)
+**Key Insight**: While a witch is draining, potion KEEPS FLOWING into the cauldron!
+
+The witch actually collects:
+```
+Expected Amount = Visible Drain + (Fill Rate × Drain Duration)
+```
+
+#### Step 4: Handle Multiple Tickets Per Day
+When multiple witches visit the same cauldron on one day:
+- Calculate total expected from the daily drain
+- Divide equally among all tickets for that day
+- Each witch gets their fair share
+
+#### Step 5: Validate and Classify Tickets
+Compare reported amount to expected amount:
+
+**Thresholds (Balanced for Realism)**:
+- **< 10% error** → ✅ **Valid** (honest reporting)
+- **10-25% error** → 🟡 **Suspicious** (worth investigating)
+- **> 25% error** → 🚨 **Fraudulent** (clear dishonesty)
 
 ### Trust Scoring System
 
-Each witch starts with 100 trust points:
-- ✅ **Accurate ticket**: +0 points (maintaining trust)
-- 🟡 **Minor discrepancy** (±5%): -5 points
-- 🔴 **Major fraud** (>10% off): -20 points
+Each witch starts with **100 trust points** and loses points for dishonest tickets:
+
+**Penalties (Balanced)**:
+- ✅ **Valid ticket** (< 10% error): No penalty
+- 🟡 **Suspicious ticket** (10-25% error): **-2 points**
+- 🚨 **Fraudulent ticket** (> 25% error): **-8 points**
+
+### Why Our Algorithm Works
+
+1. **Uses Real Data**: All fill rates calculated from actual API data, not assumed
+2. **Per-Cauldron Rates**: Each cauldron analyzed individually (they fill at different speeds!)
+3. **Accounts for Physics**: Continuous inflow during drainage (as required by challenge)
+4. **Handles Edge Cases**: Multiple witches per day, missing drains, capacity limits
+5. **Balanced Thresholds**: Realistic fraud detection that doesn't over-flag honest witches
 
 ## API Endpoints
 
@@ -101,6 +142,12 @@ The backend provides these endpoints:
 - React
 - Recharts (beautiful charts)
 - Leaflet (interactive maps)
-- Tailwind CSS (styling)
+
+## Key Implementation Details
+
+### Data Sources
+- **Historical cauldron levels**: Live from `https://hackutd2025.eog.systems/api/Data`
+- **Transport tickets**: Live from `https://hackutd2025.eog.systems/api/Tickets`
+- **Cauldron metadata**: Static from `background_data.json`
 
 ---
