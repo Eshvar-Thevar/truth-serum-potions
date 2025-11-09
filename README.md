@@ -1,8 +1,35 @@
 # Truth Serum: Potion Factory Fraud Detection
 
-**HackUTD 2025**
+**HackUTD 2025 - Best Use of Claude**
 
 A magical dashboard that detects dishonest courier witches and optimizes potion delivery routes using real-time data analysis and AI.
+
+---
+
+## Quick Start
+
+**First time running this project?** Check out [QUICKSTART.md](QUICKSTART.md) for:
+- Step-by-step setup instructions
+- Troubleshooting tips
+- Presentation guide for judges
+- Pre-demo checklist
+
+**TL;DR:**
+```bash
+# Terminal 1 - Backend
+cd backend
+pip install -r requirements.txt
+python api.py
+
+# Terminal 2 - Frontend  
+cd frontend
+npm install
+npm start
+```
+
+Then open `http://localhost:3000` in your browser!
+
+---
 
 ## What This Project Does
 
@@ -30,37 +57,11 @@ truth-serum-potions/
 ├── data/                 # Static data files
 │   └── background_data.json  # Cauldrons, witches, network map
 │
-└── README.md            # You are here!
+├── README.md            # You are here!
+└── QUICKSTART.md        # Detailed setup & presentation guide
 ```
 
-## How to Run This Project
-
-### Prerequisites
-- **Python 3.8+** (for backend)
-- **Node.js 16+** (for frontend)
-- **Git**
-
-### Step 1: Start the Backend (Python API)
-
-Open a terminal in VS Code:
-```bash
-cd backend
-pip install -r requirements.txt
-python api.py
-```
-
-The backend will start at `http://localhost:5000`
-
-### Step 2: Start the Frontend (React Dashboard)
-
-Open a NEW terminal in VS Code:
-```bash
-cd frontend
-npm install
-npm start
-```
-
-The dashboard will open at `http://localhost:3000`
+---
 
 ## How It Works
 
@@ -121,14 +122,7 @@ Each witch starts with **100 trust points** and loses points for dishonest ticke
 4. **Handles Edge Cases**: Multiple witches per day, missing drains, capacity limits
 5. **Balanced Thresholds**: Realistic fraud detection that doesn't over-flag honest witches
 
-## API Endpoints
-
-The backend provides these endpoints:
-
-- `GET /api/analysis` - Full fraud analysis results
-- `GET /api/tickets` - All tickets with validation status
-- `GET /api/witches` - Witch trust scores
-- `GET /api/cauldrons` - Cauldron statistics
+---
 
 ## Technologies Used
 
@@ -143,6 +137,8 @@ The backend provides these endpoints:
 - Recharts (beautiful charts)
 - Leaflet (interactive maps)
 
+---
+
 ## Key Implementation Details
 
 ### Data Sources
@@ -151,3 +147,34 @@ The backend provides these endpoints:
 - **Cauldron metadata**: Static from `background_data.json`
 
 ---
+
+## Dashboard Features
+
+### Overview Tab
+- Summary statistics (total tickets, fraud rate)
+- Pie chart visualization
+- Top fraudsters preview
+- Recent suspicious activity
+
+### Tickets Tab
+- Complete ticket validation table
+- Search and filter functionality
+- Color-coded status (green/yellow/red)
+- Detailed error percentages
+
+### Witches Tab
+- Trust scores ranked (worst first)
+- Accuracy percentages
+- Fraud amount totals
+- Bar chart comparison
+
+### Factory Map
+- Interactive Leaflet map
+- Cauldron locations with purple glow effect
+- Market location (central hub)
+- Travel routes visualization
+- Factory-themed background (no city streets!)
+
+---
+
+*Need help running the project? See [QUICKSTART.md](QUICKSTART.md)*
