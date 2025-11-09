@@ -8,8 +8,7 @@ A magical dashboard that detects dishonest courier witches and optimizes potion 
 
 1. **Fraud Detection**: Analyzes cauldron drainage patterns and compares them with witch-reported tickets to catch liars
 2. **Trust Scoring**: Tracks each witch's honesty over time
-3. **Route Optimization**: (Bonus) Finds the minimum number of witches needed to prevent cauldron overflows
-4. **Interactive Dashboard**: Beautiful visualization of the potion factory operations
+3. **Interactive Dashboard**: Beautiful visualization of the potion factory operations
 
 ## Project Structure
 
@@ -39,7 +38,7 @@ truth-serum-potions/
 ### Prerequisites
 - **Python 3.8+** (for backend)
 - **Node.js 16+** (for frontend)
-- **Git** (already have it!)
+- **Git**
 
 ### Step 1: Start the Backend (Python API)
 
@@ -103,46 +102,5 @@ The backend provides these endpoints:
 - Recharts (beautiful charts)
 - Leaflet (interactive maps)
 - Tailwind CSS (styling)
-
-## What Makes This Impressive
-
-1. **Real Data Science**: Proper time-series analysis with derivative calculations
-2. **Robust Algorithm**: Handles edge cases (continuous filling, multiple drains per day)
-3. **Beautiful Visualization**: Judges love seeing data come to life
-4. **Storytelling**: Not just "fraud detection" — it's catching dishonest witches! 🧙‍♀️
-5. **Bonus Challenge**: Route optimization to minimize witch count
-
-## Troubleshooting
-
-**Backend won't start?**
-- Make sure you're in the `backend` folder
-- Try: `pip install --upgrade pip` then reinstall requirements
-
-**Frontend won't start?**
-- Make sure you're in the `frontend` folder
-- Try: `npm install` again
-- Check if port 3000 is already in use
-
-**API errors?**
-- The HackUTD API might be rate-limited
-- Check your internet connection
-
-## Presentation Tips
-
-1. **Start with the story**: "Witches are stealing potions, we caught them!"
-2. **Show the dashboard first**: Live demo is most impressive
-3. **Explain the algorithm**: Show you understand the math
-4. **Highlight creativity**: Trust scores, witch names, magic theme
-5. **Connect to real-world**: "This same system detects fraud in supply chains"
-
-## Learning Resources
-
-Since this is your first time coding, here are the key concepts:
-
-- **API**: A way for programs to talk to each other
-- **Frontend**: What the user sees (the website)
-- **Backend**: The smart logic running behind the scenes
-- **JSON**: A format for storing data (looks like JavaScript objects)
-- **Endpoint**: A URL that returns data (like a vending machine button)
 
 ---
