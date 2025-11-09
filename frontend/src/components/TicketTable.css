@@ -1,0 +1,173 @@
+.ticket-table-container {
+  background: rgba(255, 255, 255, 0.1);
+  backdrop-filter: blur(10px);
+  border-radius: 20px;
+  padding: 30px;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+  color: white;
+}
+
+.ticket-table-container.compact {
+  background: transparent;
+  padding: 0;
+  box-shadow: none;
+}
+
+.table-controls {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 20px;
+  gap: 20px;
+  flex-wrap: wrap;
+}
+
+.filter-buttons {
+  display: flex;
+  gap: 10px;
+}
+
+.filter-buttons button {
+  background: rgba(255, 255, 255, 0.1);
+  color: white;
+  border: 2px solid rgba(255, 255, 255, 0.2);
+  padding: 8px 16px;
+  border-radius: 20px;
+  cursor: pointer;
+  transition: all 0.3s;
+}
+
+.filter-buttons button:hover {
+  background: rgba(255, 255, 255, 0.2);
+}
+
+.filter-buttons button.active {
+  background: linear-gradient(135deg, #8b5cf6 0%, #ec4899 100%);
+  border-color: transparent;
+}
+
+.search-input {
+  background: rgba(255, 255, 255, 0.1);
+  border: 2px solid rgba(255, 255, 255, 0.2);
+  color: white;
+  padding: 10px 15px;
+  border-radius: 20px;
+  font-size: 1em;
+  min-width: 250px;
+}
+
+.search-input::placeholder {
+  color: rgba(255, 255, 255, 0.5);
+}
+
+.table-wrapper {
+  overflow-x: auto;
+}
+
+.ticket-table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.ticket-table th {
+  background: rgba(255, 255, 255, 0.1);
+  padding: 15px;
+  text-align: left;
+  font-weight: 600;
+  border-bottom: 2px solid rgba(255, 255, 255, 0.2);
+}
+
+.ticket-table td {
+  padding: 12px 15px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.ticket-table tr:hover {
+  background: rgba(255, 255, 255, 0.05);
+}
+
+.row-valid {
+  background: rgba(16, 185, 129, 0.1);
+}
+
+.row-suspicious {
+  background: rgba(245, 158, 11, 0.1);
+}
+
+.row-fraudulent {
+  background: rgba(239, 68, 68, 0.1);
+}
+
+.ticket-id {
+  font-family: 'Courier New', monospace;
+  font-size: 0.9em;
+}
+
+.amount {
+  text-align: right;
+  font-family: 'Courier New', monospace;
+}
+
+.diff {
+  text-align: right;
+  font-family: 'Courier New', monospace;
+  font-weight: bold;
+}
+
+.diff.positive {
+  color: #ef4444;
+}
+
+.diff.negative {
+  color: #10b981;
+}
+
+.status-badge {
+  display: inline-block;
+  padding: 5px 12px;
+  border-radius: 15px;
+  font-size: 0.85em;
+  font-weight: 600;
+}
+
+.status-valid {
+  background: rgba(16, 185, 129, 0.2);
+  color: #10b981;
+}
+
+.status-suspicious {
+  background: rgba(245, 158, 11, 0.2);
+  color: #f59e0b;
+}
+
+.status-fraudulent {
+  background: rgba(239, 68, 68, 0.2);
+  color: #ef4444;
+  animation: pulse 2s infinite;
+}
+
+@keyframes pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.7; }
+}
+
+.table-footer {
+  margin-top: 20px;
+  text-align: center;
+  opacity: 0.7;
+}
+
+@media (max-width: 768px) {
+  .table-controls {
+    flex-direction: column;
+    align-items: stretch;
+  }
+  
+  .filter-buttons {
+    flex-wrap: wrap;
+  }
+  
+  .search-input {
+    width: 100%;
+  }
+}
